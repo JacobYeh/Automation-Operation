@@ -1,3 +1,23 @@
+<#
+.synopsis
+
+Schedule check the server log and generated a report.
+
+.Description
+This is a script used to schedule generating the server log report. and will using the function which out of this script.
+.Parameter Computername
+Servers list 
+.example
+ps c:\users\jacob\desktop\script -file c:\users\jacob\desktop\hostlist.txt
+
+need following function:
+1:Check the connection status(import external function)
+2:Write a function to filter the log, security, system error, power events. and then have a good format to html
+3:Write a task/job, import the function, have html report, good title, then using send mail command
+4:error action
+#>
+[CmdletBinding()]
+
 $count=Read-Host "please input the count number you want"
 
 $location=Read-host "Your location"
@@ -9,9 +29,10 @@ switch($location)
 }
 $con = Test-Connection $hosts -count $count -ErrorAction SilentlyContinue
 $average = ($con.ResponseTime | Measure-Object -Average).Average -as[int]
-$status=(($count-($con.Count))/$count)*100 -as[int]
-$output= "network connection to $hosts average time is $average, packet lost status is $status %"
-switch($status)
+$status= (($count-($con.Count))/$count) -as[int]
+$percentage=“{0:0%}” -f$status
+$output= "network connection to $hosts average time is $average, packet lost status is $percentage "
+switch($percentage)
 {
     {$_ -gt 90} {Write-host $output  -BackgroundColor DarkRed}
     {$_ -gt 50 -and $_ -lt 90}  {Write-host $output  -BackgroundColor Red}
