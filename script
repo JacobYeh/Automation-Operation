@@ -1,0 +1,20 @@
+$count=Read-Host "please input the count number you want"
+
+$location=Read-host "Your location"
+switch($location)
+{
+ SG {$hosts="www.baidu.com"}
+ SH {$hosts="www.amazon.com"}
+ TK {$hosts="www.bing.com"} 
+}
+$con = Test-Connection $hosts -count $count -ErrorAction SilentlyContinue
+$average = ($con.ResponseTime | Measure-Object -Average).Average -as[int]
+$status=(($count-($con.Count))/$count)*100 -as[int]
+$output= "network connection to $hosts average time is $average, packet lost status is $status %"
+switch($status)
+{
+    {$_ -gt 90} {Write-host $output  -BackgroundColor DarkRed}
+    {$_ -gt 50 -and $_ -lt 90}  {Write-host $output  -BackgroundColor Red}
+    {$_ -gt 15 -and $_ -lt 50}  {Write-host $output  -BackgroundColor Cyan}
+    {$_ -lt 5}   {Write-host $output  -BackgroundColor Green}
+}
