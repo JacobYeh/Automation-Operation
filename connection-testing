@@ -1,0 +1,55 @@
+<#
+.Synopsis
+
+Check the network connection to other office and AWS site
+
+.Description
+
+This is a script used to check the network connection to other office and AWS site from your region
+
+.Parameter
+count
+location
+ 
+.EXAMPLE
+ps c:\users\jye\desktop\ping.ps1 -file c:\users\jye\desktop\hostlist.txt
+.NOTES
+    Author: 
+    Date:   
+
+.VERSION HISTORY:
+	1.0.0		11/20/2019	Jacob Ye	Script first created
+    1.0.1       11/21/2019              Adding packet lost function, move the output format, adding taifp02,sinfp02,tokfp01
+
+#>
+[CmdletBinding()]
+$count=Read-Host "please input the count number you want"
+$CompName = {"208.78.0.60","hkgfp01","inf-dfs-bei1-1","sydfp01","colo-lonfrcel01","nyccelerra.fitch.corp","taifp02","tokfp01" ,"sinfp02","inf-dfs-sha1-01"}.Invoke()
+
+
+$location=Read-host "Your location"
+switch($location)
+{
+ SG {$hosts=$CompName.Remove("sinfp02")}
+ SH {$hosts=$CompName.Remove("inf-dfs-sha1-01")}
+ TK {$hosts=$CompName.Remove("tokfp01")} 
+ SYD{$hosts=$CompName.Remove("sydfp01")}
+ HK {$hosts=$CompName.Remove("hkgfp01")}
+ BJ {$hosts=$CompName.Remove("inf-dfs-bei1-1")}
+}
+
+foreach ($server in $CompName) 
+{
+$con = Test-Connection $server -count $count -ErrorAction SilentlyContinue
+$average = ($con.ResponseTime | Measure-Object -Average).Average -as[int]
+$status= (($count-($con.Count))/$count) 
+$percentage=“{0:0%}” -f$status
+$output= "Average network connection time from $location to $server  is $average, packet lost  is $percentage "
+switch($percentage)
+{
+    {$_ -ge 0.60} {Write-host $output  -BackgroundColor DarkRed}
+    {$_ -ge 0.10 -and $_ -lt 0.60}  {Write-host $output  -BackgroundColor Red}
+    {$_ -ge 0.02 -and $_ -lt 0.10}  {Write-host $output  -BackgroundColor Cyan}
+    {$_ -lt 0.02 }   {Write-host $output  -BackgroundColor Blue}
+}
+}
